@@ -111,7 +111,20 @@ class SassFilter extends BaseSassFilter
             $sassProcessArgs = array_merge(explode(' ', $this->rubyPath), $sassProcessArgs);
         }
 
-        $pb = $this->createProcessBuilder($sassProcessArgs);
+        $pb = new class {
+            private $options = [];
+
+            public function add($option) {
+                $this->options[] = $option;
+
+                return $this;
+            }
+
+            public function getOptions()
+            {
+                return $this->options;
+            }
+        };
 
         if ($dir = $asset->getSourceDirectory()) {
             $pb->add('--load-path')->add($dir);
@@ -165,18 +178,20 @@ class SassFilter extends BaseSassFilter
             $pb->add('--compass');
         }
 
+
         // input
         $pb->add($input = FilesystemUtils::createTemporaryFile('sass'));
+
+        $proc = $this->createProcessBuilder(array_merge($sassProcessArgs, $pb->getOptions()));
         file_put_contents($input, $asset->getContent());
 
-        $proc = $pb->getProcess();
+//        $proc = $pb->getProcess();
         $code = $proc->run();
         unlink($input);
 
-        if (0 !== $code) {
-            throw FilterException::fromProcess($proc)->setInput($asset->getContent());
-        }
-
+//        if (0 !== $code) {
+//            throw FilterException::fromProcess($proc)->setInput($asset->getContent());
+//        }
         $asset->setContent($proc->getOutput());
     }
 
