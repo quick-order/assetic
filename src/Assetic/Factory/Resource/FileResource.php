@@ -42,6 +42,6 @@ class FileResource implements ResourceInterface
 
     public function __toString()
     {
-        return $this->path;
+        return str_replace(':', '/', $this->path);
     }
 }
